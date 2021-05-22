@@ -30,7 +30,7 @@ namespace MusicBeePlugin
             _about.Type = PluginType.General;
             _about.VersionMajor = 1;  // your plugin version
             _about.VersionMinor = 4;
-            _about.Revision = 2;
+            _about.Revision = 3;
             _about.MinInterfaceVersion = MinInterfaceVersion;
             _about.MinApiRevision = MinApiRevision;
             _about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
@@ -181,7 +181,7 @@ namespace MusicBeePlugin
                 var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
                 var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
 
-                _discordPresence.Assets.LargeImageText = padString(!_settings.DoNotDisplayInformation ? $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}" : $"Playing on MusicBee");
+                _discordPresence.Assets.LargeImageText = padString(!_settings.DoNotDisplayInformation ? $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}" : _settings.LargeImageText);
 
                 _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
                 _discordPresence.Assets.SmallImageKey = padString(name);

@@ -89,6 +89,14 @@ namespace MusicBeePlugin
             set => SetIfChanged("_textOnly", value);
         }
 
+        [DataMember] private string _largeImageText;
+
+        public string LargeImageText
+        {
+            get => _largeImageText ?? "MusicBee";
+            set => SetIfChanged("_largeImageText", value);
+        }
+
         #region Custom Stuff
         [DataMember] private string _clientId;
 

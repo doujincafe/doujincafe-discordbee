@@ -60,6 +60,7 @@ namespace MusicBeePlugin
             pausedImageId.Text = settings.PausedImage;
             stoppedImage.Text = settings.StoppedImage;
             displayFileInfoCheckbox.Checked = settings.DoNotDisplayInformation;
+            largeImageText.Text = settings.LargeImageText;
         }
 
         private void buttonPlaceholders_Click(object sender, EventArgs e)
@@ -93,6 +94,7 @@ namespace MusicBeePlugin
             _settings.PausedImage = pausedImageId.Text;
             _settings.StoppedImage = stoppedImage.Text;
             _settings.DoNotDisplayInformation = displayFileInfoCheckbox.Checked;
+            _settings.LargeImageText = largeImageText.Text;
 
             if (_defaultsRestored && !_settings.IsDirty)
             {

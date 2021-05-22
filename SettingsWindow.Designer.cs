@@ -38,10 +38,11 @@
             this.textBoxState = new System.Windows.Forms.TextBox();
             this.textBoxDetails = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBoxLargeImage = new System.Windows.Forms.TextBox();
+            this.largeImageText = new System.Windows.Forms.TextBox();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.customizedGroup = new System.Windows.Forms.GroupBox();
             this.quirksGroup = new System.Windows.Forms.GroupBox();
+            this.displayFileInfoCheckbox = new System.Windows.Forms.CheckBox();
             this.stoppedImage = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
             this.pausedImageId = new System.Windows.Forms.TextBox();
@@ -60,7 +61,7 @@
             this.buttonRestoreDefaults = new System.Windows.Forms.Button();
             this.buttonSaveClose = new System.Windows.Forms.Button();
             this.buttonPlaceholders = new System.Windows.Forms.Button();
-            this.displayFileInfoCheckbox = new System.Windows.Forms.CheckBox();
+            this.helpTextForLargeImageText = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -94,7 +95,7 @@
             this.splitContainer1.Panel1.Controls.Add(this.textBoxState);
             this.splitContainer1.Panel1.Controls.Add(this.textBoxDetails);
             this.splitContainer1.Panel1.Controls.Add(this.label1);
-            this.splitContainer1.Panel1.Controls.Add(this.textBoxLargeImage);
+            this.splitContainer1.Panel1.Controls.Add(this.largeImageText);
             // 
             // splitContainer1.Panel2
             // 
@@ -212,17 +213,17 @@
             this.label1.TabIndex = 1;
             this.label1.Text = "MusicBee";
             // 
-            // textBoxLargeImage
+            // largeImageText
             // 
-            this.textBoxLargeImage.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(114)))), ((int)(((byte)(137)))), ((int)(((byte)(218)))));
-            this.textBoxLargeImage.Font = new System.Drawing.Font("Arial", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxLargeImage.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(230)))), ((int)(((byte)(246)))));
-            this.textBoxLargeImage.Location = new System.Drawing.Point(12, 12);
-            this.textBoxLargeImage.Multiline = true;
-            this.textBoxLargeImage.Name = "textBoxLargeImage";
-            this.textBoxLargeImage.Size = new System.Drawing.Size(90, 60);
-            this.textBoxLargeImage.TabIndex = 0;
-            this.textBoxLargeImage.Text = "Quality is Displayed";
+            this.largeImageText.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(114)))), ((int)(((byte)(137)))), ((int)(((byte)(218)))));
+            this.largeImageText.Font = new System.Drawing.Font("Arial", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.largeImageText.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(226)))), ((int)(((byte)(230)))), ((int)(((byte)(246)))));
+            this.largeImageText.Location = new System.Drawing.Point(12, 12);
+            this.largeImageText.Multiline = true;
+            this.largeImageText.Name = "largeImageText";
+            this.largeImageText.Size = new System.Drawing.Size(90, 60);
+            this.largeImageText.TabIndex = 0;
+            this.largeImageText.Text = "MusicBee";
             // 
             // splitContainer2
             // 
@@ -273,13 +274,24 @@
             // 
             // quirksGroup
             // 
+            this.quirksGroup.Controls.Add(this.helpTextForLargeImageText);
             this.quirksGroup.Controls.Add(this.displayFileInfoCheckbox);
-            this.quirksGroup.Location = new System.Drawing.Point(240, 19);
+            this.quirksGroup.Location = new System.Drawing.Point(240, 14);
             this.quirksGroup.Name = "quirksGroup";
-            this.quirksGroup.Size = new System.Drawing.Size(220, 94);
+            this.quirksGroup.Size = new System.Drawing.Size(220, 99);
             this.quirksGroup.TabIndex = 15;
             this.quirksGroup.TabStop = false;
             this.quirksGroup.Text = "Quirks";
+            // 
+            // displayFileInfoCheckbox
+            // 
+            this.displayFileInfoCheckbox.AutoSize = true;
+            this.displayFileInfoCheckbox.Location = new System.Drawing.Point(10, 26);
+            this.displayFileInfoCheckbox.Name = "displayFileInfoCheckbox";
+            this.displayFileInfoCheckbox.Size = new System.Drawing.Size(163, 17);
+            this.displayFileInfoCheckbox.TabIndex = 8;
+            this.displayFileInfoCheckbox.Text = "Do not display file information";
+            this.displayFileInfoCheckbox.UseVisualStyleBackColor = true;
             // 
             // stoppedImage
             // 
@@ -394,7 +406,7 @@
             // 
             // textBoxSeperator
             // 
-            this.textBoxSeperator.Location = new System.Drawing.Point(9, 35);
+            this.textBoxSeperator.Location = new System.Drawing.Point(17, 34);
             this.textBoxSeperator.Name = "textBoxSeperator";
             this.textBoxSeperator.Size = new System.Drawing.Size(182, 20);
             this.textBoxSeperator.TabIndex = 4;
@@ -402,7 +414,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 19);
+            this.label5.Location = new System.Drawing.Point(14, 18);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(61, 13);
             this.label5.TabIndex = 0;
@@ -447,15 +459,15 @@
             this.buttonPlaceholders.UseVisualStyleBackColor = true;
             this.buttonPlaceholders.Click += new System.EventHandler(this.buttonPlaceholders_Click);
             // 
-            // displayFileInfoCheckbox
+            // helpTextForLargeImageText
             // 
-            this.displayFileInfoCheckbox.AutoSize = true;
-            this.displayFileInfoCheckbox.Location = new System.Drawing.Point(10, 26);
-            this.displayFileInfoCheckbox.Name = "displayFileInfoCheckbox";
-            this.displayFileInfoCheckbox.Size = new System.Drawing.Size(163, 17);
-            this.displayFileInfoCheckbox.TabIndex = 8;
-            this.displayFileInfoCheckbox.Text = "Do not display file information";
-            this.displayFileInfoCheckbox.UseVisualStyleBackColor = true;
+            this.helpTextForLargeImageText.AutoSize = true;
+            this.helpTextForLargeImageText.Location = new System.Drawing.Point(6, 56);
+            this.helpTextForLargeImageText.Name = "helpTextForLargeImageText";
+            this.helpTextForLargeImageText.Size = new System.Drawing.Size(211, 26);
+            this.helpTextForLargeImageText.TabIndex = 18;
+            this.helpTextForLargeImageText.Text = "Note: Large Image Text appears only when\r\nDo not display file information is tick" +
+    "ed";
             // 
             // SettingsWindow
             // 
@@ -490,7 +502,7 @@
         #endregion
 
         private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.TextBox textBoxLargeImage;
+        private System.Windows.Forms.TextBox largeImageText;
         private System.Windows.Forms.Button buttonSaveClose;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button buttonPlaceholders;
@@ -522,5 +534,6 @@
         private System.Windows.Forms.TextBox clientId;
         private System.Windows.Forms.Label labelForClientId;
         private System.Windows.Forms.CheckBox displayFileInfoCheckbox;
+        private System.Windows.Forms.Label helpTextForLargeImageText;
     }
 }
