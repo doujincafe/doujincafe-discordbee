@@ -25,14 +25,6 @@ namespace MusicBeePlugin
             set => setIfChanged("_seperator", value);
         }
 
-        [DataMember] private string _largeImageText;
-
-        public string LargeImageText
-        {
-            get => _largeImageText == null ? "MusicBee" : _largeImageText;
-            set => setIfChanged("_largeImageText", value);
-        }
-
         [DataMember] private string _smallImageText;
 
         public string SmallImageText

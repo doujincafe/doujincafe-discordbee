@@ -176,8 +176,25 @@ namespace MusicBeePlugin
                     _discordPresence.Assets.SmallImageText = null;
                     return;
                 }
+
+                // Large Image Text
+                string codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
+                string size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
+                string channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
+                string sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
+                string bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
+                string duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
+
+                if (!_settings.DoNotDisplayInformation)
+                {
+                    _discordPresence.Assets.LargeImageText = padString($"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}");
+                }
+                else
+                {
+                    _discordPresence.Assets.LargeImageText = padString($"Playing on MusicBee");
+                }
+
                 _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
-                _discordPresence.Assets.LargeImageText = padString(_layoutHandler.Render(_settings.LargeImageText, metaDataDict, _settings.Seperator));
                 _discordPresence.Assets.SmallImageKey = padString(name);
                 _discordPresence.Assets.SmallImageText = padString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator)); ;
             }

@@ -49,7 +49,6 @@ namespace MusicBeePlugin
             textBoxTrackCnt.Text = settings.PresenceTrackCnt;
             textBoxDetails.Text = settings.PresenceDetails;
             textBoxState.Text = settings.PresenceState;
-            textBoxLargeImage.Text = settings.LargeImageText;
             textBoxSmallImage.Text = settings.SmallImageText;
             textBoxSeperator.Text = settings.Seperator;
             checkBoxPresenceUpdate.Checked = settings.UpdatePresenceWhenStopped;
@@ -83,7 +82,6 @@ namespace MusicBeePlugin
             _settings.PresenceTrackCnt = textBoxTrackCnt.Text;
             _settings.PresenceDetails = textBoxDetails.Text;
             _settings.PresenceState = textBoxState.Text;
-            _settings.LargeImageText = textBoxLargeImage.Text;
             _settings.SmallImageText = textBoxSmallImage.Text;
             _settings.Seperator = textBoxSeperator.Text;
             _settings.UpdatePresenceWhenStopped = checkBoxPresenceUpdate.Checked;

@@ -1,5 +1,5 @@
 # DiscordBee
-MusicBee plugin that updates your Discord status with the currently playing track
+MusicBee plugin that updates your Discord status with the currently playing track + Users are freely to use their own Application without modifying the Source Code.
 
 ## Installation
 Just copy all plugin files into your MusicBee Plugins directory (usually "C:\Program Files (x86)\MusicBee\Plugins").
