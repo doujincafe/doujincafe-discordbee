@@ -13,7 +13,7 @@ After installing the plugin start MusicBee and your Discord status should be sho
 The Discord API has a 15s rate limit, so it can take up to 15s for a status change to actually show in Discord.
 
 ## Configuration
-![Settings](https://i.imgur.com/VhJM71N.png)
+![Settings](docs/screenshot.png)
 
 You can configure what is displayed in your profile by opening the plugin settings in MusicBee "Edit -> Preferences -> Plugins -> DiscordBee -> Configure".
 
