@@ -35,3 +35,7 @@ Feel free to send pull requests or open issues. The project is a Visual Studio 2
 ## Libraries and Assets used
  - [Discord RPC Sharp](https://github.com/Lachee/discord-rpc-csharp)
  - [MusicBee Logo](https://ru.wikipedia.org/wiki/%D0%A4%D0%B0%D0%B9%D0%BB:MusicBee_Logo.png)
+
+ ## Original Repository
+
+ Original Source Code of this plugin resides [here](https://github.com/sll552/DiscordBee).
