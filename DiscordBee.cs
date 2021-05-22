@@ -139,31 +139,27 @@ namespace MusicBeePlugin
             // Discord also disallows strings bigger than 128bytes so handle that as well
             string padString(string input)
             {
-                if (!string.IsNullOrEmpty(input))
+                if (string.IsNullOrEmpty(input)) return input;
+                if (input.Length < 2)
                 {
-                    if (input.Length < 2)
-                    {
-                        return input + "\u180E";
-                    }
-                    if (Encoding.UTF8.GetBytes(input).Length > 128)
-                    {
-                        byte[] buffer = new byte[128];
-                        char[] inputChars = input.ToCharArray();
-                        Encoding.UTF8.GetEncoder().Convert(
-                            chars: inputChars,
-                            charIndex: 0,
-                            charCount: inputChars.Length,
-                            bytes: buffer,
-                            byteIndex: 0,
-                            byteCount: buffer.Length,
-                            flush: false,
-                            charsUsed: out _,
-                            bytesUsed: out int bytesUsed,
-                            completed: out _);
-                        return Encoding.UTF8.GetString(buffer, 0, bytesUsed);
-                    }
+                    return input + "\u180E";
                 }
-                return input;
+
+                if (Encoding.UTF8.GetBytes(input).Length <= 128) return input;
+                var buffer = new byte[128];
+                var inputChars = input.ToCharArray();
+                Encoding.UTF8.GetEncoder().Convert(
+                    chars: inputChars,
+                    charIndex: 0,
+                    charCount: inputChars.Length,
+                    bytes: buffer,
+                    byteIndex: 0,
+                    byteCount: buffer.Length,
+                    flush: false,
+                    charsUsed: out _,
+                    bytesUsed: out int bytesUsed,
+                    completed: out _);
+                return Encoding.UTF8.GetString(buffer, 0, bytesUsed);
             }
 
             void SetImage(string name)
@@ -178,25 +174,18 @@ namespace MusicBeePlugin
                 }
 
                 // Large Image Text
-                string codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
-                string size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
-                string channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
-                string sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
-                string bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
-                string duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
+                var codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
+                var size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
+                var channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
+                var sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
+                var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
+                var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
 
-                if (!_settings.DoNotDisplayInformation)
-                {
-                    _discordPresence.Assets.LargeImageText = padString($"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}");
-                }
-                else
-                {
-                    _discordPresence.Assets.LargeImageText = padString($"Playing on MusicBee");
-                }
+                _discordPresence.Assets.LargeImageText = padString(!_settings.DoNotDisplayInformation ? $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}" : $"Playing on MusicBee");
 
                 _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
                 _discordPresence.Assets.SmallImageKey = padString(name);
-                _discordPresence.Assets.SmallImageText = padString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator)); ;
+                _discordPresence.Assets.SmallImageText = padString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
             }
 
             _discordPresence.State = padString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));

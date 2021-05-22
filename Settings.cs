@@ -11,7 +11,7 @@ namespace MusicBeePlugin
     public class Settings
     {
         private string FilePath { get; set; }
-        public bool IsDirty { get; private set; } = false;
+        public bool IsDirty { get; private set; }
 
         // Don't serialize properties so only user set changes are serialized and not default values
 
@@ -21,48 +21,48 @@ namespace MusicBeePlugin
 
         public string Seperator
         {
-            get => _seperator == null ? "./-_" : _seperator;
-            set => setIfChanged("_seperator", value);
+            get => _seperator ?? "./-_";
+            set => SetIfChanged("_seperator", value);
         }
 
         [DataMember] private string _smallImageText;
 
         public string SmallImageText
         {
-            get => _smallImageText == null ? "[Volume]%" : _smallImageText;
-            set => setIfChanged("_smallImageText", value);
+            get => _smallImageText ?? "[Volume]%";
+            set => SetIfChanged("_smallImageText", value);
         }
 
         [DataMember] private string _presenceState;
 
         public string PresenceState
         {
-            get => _presenceState == null ? "[TrackTitle]" : _presenceState;
-            set => setIfChanged("_presenceState", value);
+            get => _presenceState ?? "[TrackTitle]";
+            set => SetIfChanged("_presenceState", value);
         }
 
         [DataMember] private string _presenceDetails;
 
         public string PresenceDetails
         {
-            get => _presenceDetails == null ? "[Artist] - [Album]" : _presenceDetails;
-            set => setIfChanged("_presenceDetails", value);
+            get => _presenceDetails ?? "[Artist] - [Album]";
+            set => SetIfChanged("_presenceDetails", value);
         }
 
         [DataMember] private string _presenceTrackCnt;
 
         public string PresenceTrackCnt
         {
-            get => _presenceTrackCnt == null ? "[TrackCount]" : _presenceTrackCnt;
-            set => setIfChanged("_presenceTrackCnt", value);
+            get => _presenceTrackCnt ?? "[TrackCount]";
+            set => SetIfChanged("_presenceTrackCnt", value);
         }
 
         [DataMember] private string _presenceTrackNo;
 
         public string PresenceTrackNo
         {
-            get => _presenceTrackNo == null ? "[TrackNo]" : _presenceTrackNo;
-            set => setIfChanged("_presenceTrackNo", value);
+            get => _presenceTrackNo ?? "[TrackNo]";
+            set => SetIfChanged("_presenceTrackNo", value);
         }
 
         [DataMember] private bool? _updatePresenceWhenStopped;
@@ -70,7 +70,7 @@ namespace MusicBeePlugin
         public bool UpdatePresenceWhenStopped
         {
             get => !_updatePresenceWhenStopped.HasValue || _updatePresenceWhenStopped.Value;
-            set => setIfChanged("_updatePresenceWhenStopped", value);
+            set => SetIfChanged("_updatePresenceWhenStopped", value);
         }
 
         [DataMember] private bool? _showRemainingTime;
@@ -78,7 +78,7 @@ namespace MusicBeePlugin
         public bool ShowRemainingTime
         {
             get => _showRemainingTime.HasValue && _showRemainingTime.Value;
-            set => setIfChanged("_showRemainingTime", value);
+            set => SetIfChanged("_showRemainingTime", value);
         }
 
         [DataMember] private bool? _textOnly;
@@ -86,7 +86,7 @@ namespace MusicBeePlugin
         public bool TextOnly
         {
             get => _textOnly.HasValue && _textOnly.Value;
-            set => setIfChanged("_textOnly", value);
+            set => SetIfChanged("_textOnly", value);
         }
 
         #region Custom Stuff
@@ -94,40 +94,40 @@ namespace MusicBeePlugin
 
         public string ClientId
         {
-            get => _clientId == null ? "409394531948298250" : _clientId;
-            set => setIfChanged("_clientId", value);
+            get => _clientId ?? "409394531948298250";
+            set => SetIfChanged("_clientId", value);
         }
 
         [DataMember] private string _largeImageId;
 
         public string LargeImageId
         {
-            get => _largeImageId == null ? "logo" : _largeImageId;
-            set => setIfChanged("_largeImageId", value);
+            get => _largeImageId ?? "logo";
+            set => SetIfChanged("_largeImageId", value);
         }
 
         [DataMember] private string _playingImage;
 
         public string PlayingImage
         {
-            get => _playingImage == null ? "play" : _playingImage;
-            set => setIfChanged("_playingImage", value);
+            get => _playingImage ?? "play";
+            set => SetIfChanged("_playingImage", value);
         }
 
         [DataMember] private string _pausedImage;
 
         public string PausedImage
         {
-            get => _pausedImage == null ? "pause" : _pausedImage;
-            set => setIfChanged("_pausedImage", value);
+            get => _pausedImage ?? "pause";
+            set => SetIfChanged("_pausedImage", value);
         }
 
         [DataMember] private string _stoppedImage;
 
         public string StoppedImage
         {
-            get => _stoppedImage == null ? "stop" : _stoppedImage;
-            set => setIfChanged("_stoppedImage", value);
+            get => _stoppedImage ?? "stop";
+            set => SetIfChanged("_stoppedImage", value);
         }
 
         [DataMember] private bool? _doNotDisplayInformation;
@@ -135,7 +135,7 @@ namespace MusicBeePlugin
         public bool DoNotDisplayInformation
         {
             get => _doNotDisplayInformation.HasValue && _doNotDisplayInformation.Value;
-            set => setIfChanged("_doNotDisplayInformation", value);
+            set => SetIfChanged("_doNotDisplayInformation", value);
         }
         #endregion
 
@@ -159,32 +159,23 @@ namespace MusicBeePlugin
             return newSettings;
         }
 
-        private void setIfChanged<T>(string fieldName, T value)
+        private void SetIfChanged<T>(string fieldName, T value)
         {
-            FieldInfo target = GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            var target = GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
 
-            if (target != null)
-            {
-                PropertyInfo targetProp = GetType().GetProperty(getPropertyNameForField(target.Name), BindingFlags.Instance | BindingFlags.Public);
-                if (targetProp != null)
-                {
-                    if (!targetProp.GetValue(this, null).Equals(value))
-                    {
-                        target.SetValue(this, value);
-                        IsDirty = true;
-                    }
-                }
-            }
+            if (target == null) return;
+            var targetProp = GetType().GetProperty(getPropertyNameForField(target.Name), BindingFlags.Instance | BindingFlags.Public);
+            if (targetProp == null) return;
+            if (targetProp.GetValue(this, null).Equals(value)) return;
+            target.SetValue(this, value);
+            IsDirty = true;
         }
 
         private string getPropertyNameForField(string field)
         {
-            if (field.StartsWith("_"))
-            {
-                string tmp = field.Remove(0, 1);
-                return tmp.First().ToString().ToUpper() + tmp.Substring(1);
-            }
-            return null;
+            if (!field.StartsWith("_")) return null;
+            var tmp = field.Remove(0, 1);
+            return tmp.First().ToString().ToUpper() + tmp.Substring(1);
         }
 
         public void Save()
