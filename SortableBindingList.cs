@@ -20,14 +20,12 @@ namespace MusicBeePlugin
     }
     protected override void ApplySortCore(PropertyDescriptor prop, ListSortDirection direction)
     {
-      if (PropertyComparer.CanSort(prop.PropertyType))
-      {
-        ((List<T>)Items).Sort(new PropertyComparer(prop, direction));
-        _sortDirection = direction;
-        _sortProperty = prop;
-        _isSorted = true;
-        OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
-      }
+      if (!PropertyComparer.CanSort(prop.PropertyType)) return;
+      ((List<T>)Items).Sort(new PropertyComparer(prop, direction));
+      _sortDirection = direction;
+      _sortProperty = prop;
+      _isSorted = true;
+      OnListChanged(new ListChangedEventArgs(ListChangedType.Reset, -1));
     }
     protected override void RemoveSortCore()
     {

@@ -137,7 +137,7 @@ namespace MusicBeePlugin
             // Discord allows only strings with a min length of 2 or the update fails
             // so add some exotic space (Mongolian vovel seperator) to the string if it is smaller
             // Discord also disallows strings bigger than 128bytes so handle that as well
-            string padString(string input)
+            string PadString(string input)
             {
                 if (string.IsNullOrEmpty(input)) return input;
                 if (input.Length < 2)
@@ -181,14 +181,14 @@ namespace MusicBeePlugin
                 var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
                 var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
 
-                _discordPresence.Assets.LargeImageText = padString(!_settings.DoNotDisplayInformation ? $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}" : _settings.LargeImageText);
+                _discordPresence.Assets.LargeImageText = PadString(!_settings.DoNotDisplayInformation ? $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}" : _settings.LargeImageText);
 
                 _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
-                _discordPresence.Assets.SmallImageKey = padString(name);
-                _discordPresence.Assets.SmallImageText = padString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
+                _discordPresence.Assets.SmallImageKey = PadString(name);
+                _discordPresence.Assets.SmallImageText = PadString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
             }
 
-            _discordPresence.State = padString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));
+            _discordPresence.State = PadString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));
 
             var t = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1));
 
@@ -225,7 +225,7 @@ namespace MusicBeePlugin
                     break;
             }
 
-            _discordPresence.Details = padString(_layoutHandler.Render(_settings.PresenceDetails, metaDataDict, _settings.Seperator));
+            _discordPresence.Details = PadString(_layoutHandler.Render(_settings.PresenceDetails, metaDataDict, _settings.Seperator));
 
             var trackcnt = -1;
             var trackno = -1;
