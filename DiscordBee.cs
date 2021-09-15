@@ -333,16 +333,7 @@ namespace MusicBeePlugin
                 return;
             }
 
-            // Large Image Text
-            var codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
-            var size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
-            var channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
-            var sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
-            var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
-            var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
-
             _discordPresence.Assets.LargeImageText = PadString(!_settings.DoNotDisplayInformation ? DisplayAudioMetadata() : _layoutHandler.Render(_settings.LargeImageText, metaDataDict, _settings.Seperator));
-
             _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
             _discordPresence.Assets.SmallImageKey = PadString(name);
             _discordPresence.Assets.SmallImageText = PadString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
