@@ -199,6 +199,12 @@ namespace MusicBeePlugin
             }
             ret.Add("PlayState", _mbApiInterface.Player_GetPlayState().ToString());
             ret.Add("Volume", Convert.ToInt32(_mbApiInterface.Player_GetVolume() * 100.0f).ToString());
+            ret.Add("Codec", _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind));
+            ret.Add("FileSize", _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size));
+            ret.Add("AudioChannels", _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels));
+            ret.Add("AudioSampleRate", _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate));
+            ret.Add("AudioBitrate", _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate));
+            ret.Add("Duration", _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration));
 
             return ret;
         }
