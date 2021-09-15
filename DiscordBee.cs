@@ -213,62 +213,6 @@ namespace MusicBeePlugin
             }
             var metaDataDict = GenerateMetaDataDictionary();
 
-            // Discord allows only strings with a min length of 2 or the update fails
-            // so add some exotic space (Mongolian vovel seperator) to the string if it is smaller
-            // Discord also disallows strings bigger than 128bytes so handle that as well
-            string PadString(string input)
-            {
-                if (string.IsNullOrEmpty(input)) return input;
-                if (input.Length < 2)
-                {
-                    return input + "\u180E";
-                }
-
-                if (Encoding.UTF8.GetBytes(input).Length <= 128) return input;
-                var buffer = new byte[128];
-                var inputChars = input.ToCharArray();
-                Encoding.UTF8.GetEncoder().Convert(
-                    chars: inputChars,
-                    charIndex: 0,
-                    charCount: inputChars.Length,
-                    bytes: buffer,
-                    byteIndex: 0,
-                    byteCount: buffer.Length,
-                    flush: false,
-                    charsUsed: out _,
-                    bytesUsed: out int bytesUsed,
-                    completed: out _);
-                return Encoding.UTF8.GetString(buffer, 0, bytesUsed);
-            }
-
-            void SetImage(string name)
-            {
-                if (_settings.TextOnly)
-                {
-                    _discordPresence.Assets.LargeImageKey = null;
-                    _discordPresence.Assets.LargeImageText = null;
-                    _discordPresence.Assets.SmallImageKey = null;
-                    _discordPresence.Assets.SmallImageText = null;
-                    return;
-                }
-
-                // Large Image Text
-                var codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
-                var size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
-                var channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
-                var sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
-                var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
-                var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
-
-                _discordPresence.Assets.LargeImageText = PadString(!_settings.DoNotDisplayInformation ? $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}" : _settings.LargeImageText);
-
-                _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
-                _discordPresence.Assets.SmallImageKey = PadString(name);
-                _discordPresence.Assets.SmallImageText = PadString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
-            }
-
-            _discordPresence.State = PadString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));
-
             var t = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1));
 
             if (_settings.ShowRemainingTime)
@@ -287,15 +231,15 @@ namespace MusicBeePlugin
             switch (playerGetPlayState)
             {
                 case PlayState.Playing:
-                    SetImage(_settings.PlayingImage);
+                    SetImage(_settings.PlayingImage, metaDataDict);
                     break;
                 case PlayState.Stopped:
-                    SetImage(_settings.StoppedImage);
+                    SetImage(_settings.StoppedImage, metaDataDict);
                     _discordPresence.Timestamps.Start = null;
                     _discordPresence.Timestamps.End = null;
                     break;
                 case PlayState.Paused:
-                    SetImage(_settings.PausedImage);
+                    SetImage(_settings.PausedImage, metaDataDict);
                     _discordPresence.Timestamps.Start = null;
                     _discordPresence.Timestamps.End = null;
                     break;
@@ -304,6 +248,7 @@ namespace MusicBeePlugin
                     break;
             }
 
+            _discordPresence.State = PadString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));
             _discordPresence.Details = PadString(_layoutHandler.Render(_settings.PresenceDetails, metaDataDict, _settings.Seperator));
 
             var trackcnt = -1;
@@ -343,43 +288,77 @@ namespace MusicBeePlugin
                 _discordClient.SetPresence(_discordPresence);
             }
         }
-    }
-    public class DebugLogger : ILogger
-    {
-        public LogLevel Level { get; set; }
 
-        public DebugLogger(LogLevel level)
+        #region Utilities
+        /// <summary>
+        /// Discord allows only strings with a min length of 2 or the update fails.
+        /// so add some exotic space (Mongolian vowel seperator) to the string if it is smaller.
+        /// Discord also disallows strings bigger than 128 bytes so handle that as well.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        private static string PadString(string input)
         {
-            Level = level;
+            if (string.IsNullOrEmpty(input)) return input;
+            if (input.Length < 2)
+            {
+                return input + "\u180E";
+            }
+
+            if (Encoding.UTF8.GetBytes(input).Length <= 128) return input;
+            var buffer = new byte[128];
+            var inputChars = input.ToCharArray();
+            Encoding.UTF8.GetEncoder().Convert(
+                chars: inputChars,
+                charIndex: 0,
+                charCount: inputChars.Length,
+                bytes: buffer,
+                byteIndex: 0,
+                byteCount: buffer.Length,
+                flush: false,
+                charsUsed: out _,
+                bytesUsed: out int bytesUsed,
+                completed: out _);
+            return Encoding.UTF8.GetString(buffer, 0, bytesUsed);
         }
 
-        public void Error(string message, params object[] args)
+        private void SetImage(string name, Dictionary<string, string> metaDataDict)
         {
-            if (Level > LogLevel.Error) return;
-            Log(message, args);
+            if (_settings.TextOnly)
+            {
+                _discordPresence.Assets.LargeImageKey = null;
+                _discordPresence.Assets.LargeImageText = null;
+                _discordPresence.Assets.SmallImageKey = null;
+                _discordPresence.Assets.SmallImageText = null;
+                return;
+            }
+
+            // Large Image Text
+            var codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
+            var size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
+            var channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
+            var sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
+            var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
+            var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
+
+            _discordPresence.Assets.LargeImageText = PadString(!_settings.DoNotDisplayInformation ? DisplayAudioMetadata() : _layoutHandler.Render(_settings.LargeImageText, metaDataDict, _settings.Seperator));
+
+            _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
+            _discordPresence.Assets.SmallImageKey = PadString(name);
+            _discordPresence.Assets.SmallImageText = PadString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
         }
 
-        public void Info(string message, params object[] args)
+        private string DisplayAudioMetadata()
         {
-            if (Level > LogLevel.Info) return;
-            Log(message, args);
-        }
+            var codec = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Kind);
+            var size = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Size);
+            var channels = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Channels);
+            var sampleRate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.SampleRate);
+            var bitrate = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Bitrate);
+            var duration = _mbApiInterface.NowPlaying_GetFileProperty(FilePropertyType.Duration);
 
-        public void Trace(string message, params object[] args)
-        {
-            if (Level > LogLevel.Trace) return;
-            Log(message, args);
+            return $"MusicBee: {codec} / {bitrate} / {sampleRate} / {channels} / {size} / {duration}";
         }
-
-        public void Warning(string message, params object[] args)
-        {
-            if (Level > LogLevel.Warning) return;
-            Log(message, args);
-        }
-
-        private void Log(string msg, params object[] args)
-        {
-            Debug.WriteLine("" + Level.ToString() + ": " + msg, args);
-        }
+        #endregion
     }
 }

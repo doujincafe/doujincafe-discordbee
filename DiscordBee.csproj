@@ -79,6 +79,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DebugLogger.cs" />
     <Compile Include="SortableBindingList.cs" />
     <Compile Include="LayoutHandler.cs" />
     <Compile Include="MusicBeeInterface.cs" />
