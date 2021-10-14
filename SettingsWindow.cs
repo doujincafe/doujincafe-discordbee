@@ -9,6 +9,7 @@ namespace MusicBeePlugin
         private PlaceholderTableWindow _placeholderTableWindow;
         private readonly Settings _settings;
         private bool _defaultsRestored;
+        private bool _clientIdChanged;
 
         public SettingsWindow(Plugin parent, Settings settings)
         {
@@ -41,6 +42,17 @@ namespace MusicBeePlugin
             if (e.CloseReason != CloseReason.UserClosing) return;
             Hide();
             e.Cancel = true;
+        }
+
+        private void DetectClientIdChanges(object sender, EventArgs e)
+        {
+            if (_settings.ClientId != ((TextBox)sender).Text)
+            {
+                RemindToRestart.Visible = true;
+                return;
+            }
+
+            RemindToRestart.Visible = false;
         }
 
         private void UpdateValues(Settings settings)
@@ -105,6 +117,5 @@ namespace MusicBeePlugin
             _settings.Save();
             Hide();
         }
-
     }
 }
