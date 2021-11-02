@@ -2,10 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Text;
-using DiscordRPC;
-using DiscordRPC.Logging;
-using DiscordRPC.Message;
 
 namespace MusicBeePlugin
 {
@@ -13,37 +9,10 @@ namespace MusicBeePlugin
     {
         private MusicBeeApiInterface _mbApiInterface;
         private readonly PluginInfo _about = new PluginInfo();
-        private DiscordRpcClient _discordClient;
-        private readonly RichPresence _discordPresence = new RichPresence();
+        private DiscordClient _rpcClient;
         private LayoutHandler _layoutHandler;
         private Settings _settings;
         private SettingsWindow _settingsWindow;
-        private string _clientId;
-        private bool _isConnected = false;
-        private bool IsConnected
-        {
-            get => _isConnected;
-            set
-            {
-                if (value == _isConnected) return;
-                _isConnected = value;
-                if (value || _discordClient?.IsDisposed != false) return;
-                // _isConnected set from true to false and _discordClient is not null and not disposed
-                try
-                {
-                    Debug.WriteLine("Clearing Presence after connection loss...", "DiscordBee");
-                    _discordClient.ClearPresence();
-                }
-                catch (ObjectDisposedException)
-                {
-                    // connection was null, just continue
-                }
-                finally
-                {
-                    _discordClient.Dispose();
-                }
-            }
-        }
 
         public PluginInfo Initialise(IntPtr apiInterfacePtr)
         {
@@ -57,7 +26,7 @@ namespace MusicBeePlugin
             _about.Type = PluginType.General;
             _about.VersionMajor = 1;  // your plugin version
             _about.VersionMinor = 4;
-            _about.Revision = 4;
+            _about.Revision = 5;
             _about.MinInterfaceVersion = MinInterfaceVersion;
             _about.MinApiRevision = MinApiRevision;
             _about.ReceiveNotifications = (ReceiveNotificationFlags.PlayerEvents | ReceiveNotificationFlags.TagEvents);
@@ -68,8 +37,13 @@ namespace MusicBeePlugin
             _settings = Settings.GetInstance(settingsFilePath);
             _settingsWindow = new SettingsWindow(this, _settings);
 
-            _clientId = _settings.ClientId;
-            InitialiseDiscordRpcClient();
+            _rpcClient = new DiscordClient();
+            _rpcClient.InitialiseDiscordRpc(_settings.ClientId);
+
+            _rpcClient.ConfigureToInvokeWhenReady(() =>
+            {
+                UpdateDiscordPresence(_mbApiInterface.Player_GetPlayState());
+            });
 
             // Match least number of chars possible but min 1
             _layoutHandler = new LayoutHandler(new Regex("\\[(.+?)\\]"));
@@ -77,45 +51,6 @@ namespace MusicBeePlugin
             Debug.WriteLine(_about.Name + " loaded");
 
             return _about;
-        }
-
-        private void InitialiseDiscordRpcClient()
-        {
-            Debug.WriteLine("Initialising new DiscordRpcClient instance...", "DiscordBee");
-            _discordClient = new DiscordRpcClient(_clientId, logger: new DebugLogger(LogLevel.Trace));
-            _discordClient.OnError += ErrorCallback;
-            _discordClient.OnClose += DisconnectedCallback;
-            _discordClient.OnReady += ReadyCallback;
-            _discordClient.OnConnectionFailed += ConnectionFailedCallback;
-            _discordClient.ShutdownOnly = true;
-            _discordClient.SkipIdenticalPresence = true;
-            _discordClient.Initialize();
-
-            _discordPresence.Assets = new Assets();
-            _discordPresence.Party = new Party();
-            _discordPresence.Timestamps = new Timestamps();
-        }
-
-        private void ConnectionFailedCallback(object sender, ConnectionFailedMessage args)
-        {
-            if (IsConnected) IsConnected = false;
-        }
-
-        private void ReadyCallback(object sender, ReadyMessage args)
-        {
-            Debug.WriteLine($"Ready. Connected to Discord Client with User: {args.User.Username}", "DiscordRpc");
-            IsConnected = true;
-            UpdateDiscordPresence(_mbApiInterface.Player_GetPlayState());
-        }
-
-        private void ErrorCallback(object sender, DiscordRPC.Message.ErrorMessage e)
-        {
-            Debug.WriteLine("Errored: " + e.Code + " Msg: " + e.Message);
-        }
-
-        private void DisconnectedCallback(object sender, DiscordRPC.Message.CloseMessage c)
-        {
-            Debug.WriteLine("Disconnected: " + c.Code + " Msg: " + c.Reason);
         }
 
         public string GetVersionString()
@@ -134,13 +69,13 @@ namespace MusicBeePlugin
         public void SaveSettings()
         {
             _settings.Save();
+            _rpcClient.SetClientId(_settings.ClientId);
         }
 
         // MusicBee is closing the plugin (plugin is being disabled by user or MusicBee is shutting down)
         public void Close(PluginCloseReason reason)
         {
-            _discordClient.ClearPresence();
-            _discordClient.Dispose();
+            _rpcClient.Close(true);
         }
 
         // uninstall this plugin - clean up any persisted files
@@ -153,22 +88,6 @@ namespace MusicBeePlugin
         // you need to set about.ReceiveNotificationFlags = PlayerEvents to receive all notifications, and not just the startup event
         public void ReceiveNotification(string sourceFileUrl, NotificationType type)
         {
-            Debug.WriteLine("DiscordBee: Recieved Notification {0}", type);
-            Debug.WriteLine("    IsConnected: {0}; DiscordRpcClient initialised: {1}, disposed: {2}", IsConnected, _discordClient?.IsInitialized, _discordClient?.IsDisposed);
-
-            if (!IsConnected)
-            {
-                if (_discordClient?.IsDisposed ?? true)
-                {
-                    // _discordClient is either null or disposed
-                    InitialiseDiscordRpcClient();
-                }
-                else
-                {
-                    return;
-                }
-            }
-
             // perform some action depending on the notification type
             switch (type)
             {
@@ -212,12 +131,6 @@ namespace MusicBeePlugin
         private void UpdateDiscordPresence(PlayState playerGetPlayState)
         {
             Debug.WriteLine("DiscordBee: Updating Presence with PlayState {0}...", playerGetPlayState);
-            if (!IsConnected)
-            {
-                Debug.WriteLine("Client not connected, not sending Presence update.", "DiscordBee");
-                return;
-            }
-            var metaDataDict = GenerateMetaDataDictionary();
 
             var t = DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1));
 
@@ -226,130 +139,90 @@ namespace MusicBeePlugin
                 // show remaining time
                 // subtract current track position from total duration for position seeking
                 var totalRemainingDuration = _mbApiInterface.NowPlaying_GetDuration() - _mbApiInterface.Player_GetPosition();
-                _discordPresence.Timestamps.EndUnixMilliseconds = (ulong)(Math.Round(t.TotalSeconds) + Math.Round(totalRemainingDuration / 1000.0));
+                _rpcClient.SetEndTimestamp((ulong)(Math.Round(t.TotalSeconds) + Math.Round(totalRemainingDuration / 1000.0)));
             }
             else
             {
                 // show elapsed time
-                _discordPresence.Timestamps.StartUnixMilliseconds = (ulong)(Math.Round(t.TotalSeconds) - Math.Round(_mbApiInterface.Player_GetPosition() / 1000.0));
+                _rpcClient.SetStartTimestamp((ulong)(Math.Round(t.TotalSeconds) - Math.Round(_mbApiInterface.Player_GetPosition() / 1000.0)));
             }
 
             switch (playerGetPlayState)
             {
                 case PlayState.Playing:
-                    SetImage(_settings.PlayingImage, metaDataDict);
+                    SetImage(_settings.PlayingImage);
                     break;
                 case PlayState.Stopped:
-                    SetImage(_settings.StoppedImage, metaDataDict);
-                    _discordPresence.Timestamps.Start = null;
-                    _discordPresence.Timestamps.End = null;
+                    SetImage(_settings.StoppedImage);
+                    _rpcClient.ClearTime();
                     break;
                 case PlayState.Paused:
-                    SetImage(_settings.PausedImage, metaDataDict);
-                    _discordPresence.Timestamps.Start = null;
-                    _discordPresence.Timestamps.End = null;
+                    SetImage(_settings.PausedImage);
+                    _rpcClient.ClearTime();
                     break;
                 case PlayState.Undefined:
                 case PlayState.Loading:
                     break;
             }
 
-            _discordPresence.State = PadString(_layoutHandler.Render(_settings.PresenceState, metaDataDict, _settings.Seperator));
-            _discordPresence.Details = PadString(_layoutHandler.Render(_settings.PresenceDetails, metaDataDict, _settings.Seperator));
+            _rpcClient.SetState(RenderLayoutHandler(_settings.PresenceState));
+            _rpcClient.SetDetails(RenderLayoutHandler(_settings.PresenceDetails));
 
             var trackcnt = -1;
             var trackno = -1;
             try
             {
-                trackcnt = int.Parse(_layoutHandler.Render(_settings.PresenceTrackCnt, metaDataDict, _settings.Seperator));
-                trackno = int.Parse(_layoutHandler.Render(_settings.PresenceTrackNo, metaDataDict, _settings.Seperator));
+                trackcnt = int.Parse(RenderLayoutHandler(_settings.PresenceTrackCnt));
+                trackno = int.Parse(RenderLayoutHandler(_settings.PresenceTrackNo));
             }
             catch (Exception)
             {
                 // ignored
             }
 
-            if (trackcnt < trackno || trackcnt <= 0 || trackno <= 0)
-            {
-                _discordPresence.Party = null;
-            }
-            else
-            {
-                _discordPresence.Party = new Party
-                {
-                    ID = "aaaa",
-                    Max = trackcnt,
-                    Size = trackno
-                };
-            }
+            _rpcClient.SetTrackNumbers(trackno, trackcnt);
 
             if (!_settings.UpdatePresenceWhenStopped && (playerGetPlayState == PlayState.Paused || playerGetPlayState == PlayState.Stopped))
             {
                 Debug.WriteLine("Clearing Presence...", "DiscordBee");
-                _discordClient.ClearPresence();
+                _rpcClient.Close();
+                return;
             }
-            else
-            {
-                Debug.WriteLine("Setting new Presence...", "DiscordBee");
-                _discordClient.SetPresence(_discordPresence);
-            }
+            _rpcClient.UpdatePresence();
         }
 
         #region Utilities
-        /// <summary>
-        /// Discord allows only strings with a min length of 2 or the update fails.
-        /// so add some exotic space (Mongolian vowel seperator) to the string if it is smaller.
-        /// Discord also disallows strings bigger than 128 bytes so handle that as well.
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns></returns>
-        private static string PadString(string input)
-        {
-            if (string.IsNullOrEmpty(input)) return input;
-            if (input.Length < 2)
-            {
-                return input + "\u180E";
-            }
-
-            if (Encoding.UTF8.GetBytes(input).Length <= 128) return input;
-            var buffer = new byte[128];
-            var inputChars = input.ToCharArray();
-            Encoding.UTF8.GetEncoder().Convert(
-                chars: inputChars,
-                charIndex: 0,
-                charCount: inputChars.Length,
-                bytes: buffer,
-                byteIndex: 0,
-                byteCount: buffer.Length,
-                flush: false,
-                charsUsed: out _,
-                bytesUsed: out int bytesUsed,
-                completed: out _);
-            return Encoding.UTF8.GetString(buffer, 0, bytesUsed);
-        }
-
-        private void SetImage(string name, Dictionary<string, string> metaDataDict)
+        private void SetImage(string name)
         {
             if (_settings.TextOnly)
             {
-                _discordPresence.Assets.LargeImageKey = null;
-                _discordPresence.Assets.LargeImageText = null;
-                _discordPresence.Assets.SmallImageKey = null;
-                _discordPresence.Assets.SmallImageText = null;
+                _rpcClient.ClearAssets();
                 return;
             }
 
-            _discordPresence.Assets.LargeImageText = PadString(!_settings.DoNotDisplayInformation ? DisplayAudioMetadata(metaDataDict) : _layoutHandler.Render(_settings.LargeImageText, metaDataDict, _settings.Seperator));
-            _discordPresence.Assets.LargeImageKey = _settings.LargeImageId;
-            _discordPresence.Assets.SmallImageKey = PadString(name);
-            _discordPresence.Assets.SmallImageText = PadString(_layoutHandler.Render(_settings.SmallImageText, metaDataDict, _settings.Seperator));
+            _rpcClient.SetLargeAssets(
+                RenderLayoutHandler(_settings.LargeImageId),
+                LargeImageTextHandler(_settings.DoNotDisplayInformation));
+            _rpcClient.SetSmallAssets(
+                name,
+                RenderLayoutHandler(_settings.SmallImageText));
         }
 
-        private string DisplayAudioMetadata(Dictionary<string, string> metaDataDict)
+        private string LargeImageTextHandler(bool doNotDisplayInformation)
         {
-            return _layoutHandler.Render(
-                "MusicBee: [Codec] / [AudioBitrate] / [AudioSampleRate] / [AudioChannels] / [FileSize] / [Duration]",
-                metaDataDict, _settings.Seperator);
+            if (doNotDisplayInformation)
+            {
+                return RenderLayoutHandler(_settings.LargeImageText);
+            }
+
+            return RenderLayoutHandler(
+                "MusicBee: [Codec] / [AudioBitrate] / [AudioSampleRate] / [AudioChannels] / [FileSize] / [Duration]");
+        }
+
+        private string RenderLayoutHandler(string input)
+        {
+            var metadataDictionary = GenerateMetaDataDictionary();
+            return _layoutHandler.Render(input, metadataDictionary, _settings.Seperator);
         }
         #endregion
     }

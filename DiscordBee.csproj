@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DebugLogger.cs" />
+    <Compile Include="DiscordClient.cs" />
     <Compile Include="SortableBindingList.cs" />
     <Compile Include="LayoutHandler.cs" />
     <Compile Include="MusicBeeInterface.cs" />
